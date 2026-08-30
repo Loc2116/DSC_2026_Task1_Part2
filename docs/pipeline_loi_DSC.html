@@ -1,0 +1,444 @@
+<title>Pipeline &amp; Rò điểm — LegalIR</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
+<style>
+:root{
+  --paper:#F4F6F8; --surface:#FFFFFF; --sunk:#EDF0F4;
+  --ink:#16202C; --ink-2:#3A4757; --muted:#66748A; --rule:#D6DEE7; --rule-2:#E7ECF2;
+  --nav:#1F4E79; --loss:#A6323C; --loss-soft:#E9D3D5; --ok:#2E6A5A; --warn:#9A6B12;
+  --shadow:0 1px 2px rgba(22,32,44,.06), 0 6px 20px -12px rgba(22,32,44,.22);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#101720; --surface:#18212C; --sunk:#131B24;
+    --ink:#E4EAF1; --ink-2:#BAC6D4; --muted:#8898AB; --rule:#2A3644; --rule-2:#212C38;
+    --nav:#7FB2E2; --loss:#E28B93; --loss-soft:#4A2B30; --ok:#79C2AC; --warn:#D6A649;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#101720; --surface:#18212C; --sunk:#131B24;
+  --ink:#E4EAF1; --ink-2:#BAC6D4; --muted:#8898AB; --rule:#2A3644; --rule-2:#212C38;
+  --nav:#7FB2E2; --loss:#E28B93; --loss-soft:#4A2B30; --ok:#79C2AC; --warn:#D6A649;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -14px rgba(0,0,0,.7);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1000px; margin:0 auto; padding:40px 24px 96px}
+h1,h2,h3{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif; text-wrap:balance; margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums}
+.eyebrow{font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--nav); font-weight:500}
+
+/* ── header ── */
+header{border-bottom:2px solid var(--ink); padding-bottom:22px; margin-bottom:14px}
+h1{font-size:clamp(30px,5vw,44px); line-height:1.05; letter-spacing:-.015em; margin:8px 0 10px}
+.sub{color:var(--ink-2); max-width:62ch; margin:0}
+.cfg{margin-top:16px; font-size:12.5px; color:var(--muted);
+  display:flex; flex-wrap:wrap; gap:6px 18px}
+.cfg b{color:var(--ink-2); font-weight:600}
+
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:1px;
+  background:var(--rule); border:1px solid var(--rule); margin:26px 0 40px}
+.stat{background:var(--surface); padding:14px 16px 15px}
+.stat .k{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:500}
+.stat .v{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums;
+  font-size:27px; font-weight:600; line-height:1.15; margin-top:5px; letter-spacing:-.02em}
+.stat .n{font-size:12px; color:var(--muted); margin-top:2px}
+.stat.bad .v{color:var(--loss)} .stat.good .v{color:var(--ok)}
+
+section{margin:0 0 52px}
+h2{font-size:22px; letter-spacing:-.01em; margin:0 0 4px; display:flex; align-items:baseline; gap:10px}
+h2 .idx{font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--nav); font-weight:500}
+.lede{color:var(--ink-2); margin:6px 0 20px; max-width:70ch}
+
+/* ── stacked bar ── */
+.stack{display:flex; height:34px; border:1px solid var(--rule); background:var(--surface);
+  overflow:hidden; margin-bottom:6px}
+.stack span{display:flex; align-items:center; justify-content:center;
+  font-family:"IBM Plex Mono",monospace; font-size:11.5px; font-weight:600; color:#fff;
+  border-right:1px solid var(--surface); white-space:nowrap; overflow:hidden}
+.stack-key{display:flex; flex-wrap:wrap; gap:4px 18px; font-size:12px; color:var(--muted); margin-bottom:22px}
+.stack-key i{width:9px; height:9px; display:inline-block; margin-right:6px; vertical-align:baseline}
+
+/* ── tables ── */
+.tw{overflow-x:auto; border:1px solid var(--rule); background:var(--surface); box-shadow:var(--shadow)}
+table{border-collapse:collapse; width:100%; min-width:640px; font-size:13.5px}
+th{background:var(--ink); color:var(--paper); text-align:left; font-weight:600;
+  font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; padding:9px 12px; white-space:nowrap}
+td{padding:10px 12px; border-top:1px solid var(--rule-2); vertical-align:middle}
+tbody tr:nth-child(even) td{background:var(--sunk)}
+td.num{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap}
+tr.total td{border-top:2px solid var(--ink); font-weight:700; background:var(--surface)}
+.bar{display:block; height:9px; background:var(--loss); min-width:2px}
+.bar.q{background:var(--nav)}
+.chip{display:inline-block; font-family:"IBM Plex Mono",monospace; font-size:11px;
+  padding:2px 7px; border:1px solid var(--rule); color:var(--ink-2); white-space:nowrap}
+.chip.own{border-color:var(--loss); color:var(--loss)}
+
+/* ── figure ── */
+figure{margin:0}
+figure svg{display:block; width:100%; height:auto; max-width:100%}
+.dg .leak{stroke:var(--loss)}
+.dg .leakfill{fill:var(--loss)}
+.dg .score{fill:var(--ok)}
+figcaption{font-size:12.5px; color:var(--muted); margin-top:12px; max-width:78ch}
+
+/* ── notes ── */
+.notes{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; margin-top:24px}
+.note{background:var(--surface); border:1px solid var(--rule); border-left:3px solid var(--nav);
+  padding:14px 16px; font-size:13.5px}
+.note.red{border-left-color:var(--loss)}
+.note.green{border-left-color:var(--ok)}
+.note h3{font-size:14px; margin:0 0 6px; letter-spacing:.01em}
+.note p{margin:0; color:var(--ink-2)}
+
+ol.gates{counter-reset:g; list-style:none; padding:0; margin:0; display:grid; gap:10px}
+ol.gates li{counter-increment:g; background:var(--surface); border:1px solid var(--rule);
+  padding:12px 16px 12px 46px; position:relative; font-size:13.5px; color:var(--ink-2)}
+ol.gates li::before{content:counter(g); position:absolute; left:14px; top:12px;
+  font-family:"IBM Plex Mono",monospace; font-size:12px; font-weight:600; color:var(--nav)}
+ol.gates b{color:var(--ink)}
+
+footer{border-top:1px solid var(--rule); padding-top:16px; font-size:12.5px; color:var(--muted)}
+:focus-visible{outline:2px solid var(--nav); outline-offset:2px}
+</style>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">DSC 2026 · Task 1 — LegalIR · tính lại 29/08</div>
+  <h1>Pipeline &amp; rò điểm</h1>
+  <p class="sub">Điểm mất ở đâu, do khâu nào, và còn lại bao nhiêu dư địa. Mọi con số đo trên
+    dev300 khoá cứng, ở đúng cấu hình bài đang nộp.</p>
+  <div class="cfg">
+    <span>Rổ <b>fusion RRF top-50 (khớp nhúng)</b></span>
+    <span>Đọc sâu <b>M = 20 · K = 20</b></span>
+    <span>Gộp đoạn <b>1.800 ký tự</b></span>
+    <span>Chốt top-5 <b>giữ chỗ n = 3</b></span>
+    <span>Bộ chấm <b>Vietnamese_Reranker 0,568B</b></span>
+  </div>
+</header>
+
+<div class="stats">
+  <div class="stat"><div class="k">Điểm hiện tại · dev300</div><div class="v">0,9467</div><div class="n">public LB tương ứng: 0,9118</div></div>
+  <div class="stat bad"><div class="k">Điểm đang mất</div><div class="v">5,33</div><div class="n">= 16,0 / 300 đơn vị recall</div></div>
+  <div class="stat bad"><div class="k">Câu bị mất điểm</div><div class="v">19 <span style="font-size:15px;color:var(--muted)">/ 300</span></div><div class="n">14 câu có 2 gold nên mất được nửa điểm</div></div>
+  <div class="stat good"><div class="k">Trần của hệ hiện tại</div><div class="v">0,9883</div><div class="n">recall@50 của rổ — mọi khâu sau bị chặn ở đây</div></div>
+</div>
+
+<!-- ══════════ 1 · BẢNG MẤT ĐIỂM ══════════ -->
+<section>
+  <h2><span class="idx">01</span>Điểm mất đi đâu</h2>
+  <p class="lede">Xem bảng này trước. Mỗi dòng là một cơ chế mất điểm riêng biệt, không chồng
+    lấn nhau — cộng lại đúng bằng 5,33 điểm đang thiếu so với điểm tuyệt đối.</p>
+
+  <div class="stack" role="img" aria-label="Phân bổ phần điểm mất: cả hai tầng đều vùi 46,9%, ngoài rổ 21,9%, giữ chỗ chiếm slot 12,5%, bộ chấm đẩy ra 9,4%, ngoài cổng M 9,4%">
+    <span style="width:46.9%;background:#7E1F28">46,9%</span>
+    <span style="width:21.9%;background:#A6323C">21,9%</span>
+    <span style="width:12.5%;background:#C0605B">12,5%</span>
+    <span style="width:9.4%;background:#D08C82">9,4%</span>
+    <span style="width:9.4%;background:#E0B4A8;color:#3A2020">9,4%</span>
+  </div>
+  <div class="stack-key">
+    <span><i style="background:#7E1F28"></i>Cả rổ lẫn bộ chấm đều vùi</span>
+    <span><i style="background:#A6323C"></i>Ngoài rổ 50</span>
+    <span><i style="background:#C0605B"></i>Giữ chỗ n=3 chiếm slot</span>
+    <span><i style="background:#D08C82"></i>Bộ chấm đẩy gold ra</span>
+    <span><i style="background:#E0B4A8"></i>Ngoài cổng M=20</span>
+  </div>
+
+  <div class="tw">
+  <table>
+    <thead><tr>
+      <th>Lý do mất điểm</th><th>Khâu</th><th style="text-align:right">Câu</th>
+      <th style="text-align:right">Điểm mất</th><th style="width:23%">% phần mất</th><th>Chủ</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td><b>Cả rổ lẫn bộ chấm đều vùi</b><br><span style="color:var(--muted);font-size:12.5px">gold nằm hạng 6–20 trong rổ, bộ chấm cũng không kéo lên</span></td>
+        <td>truy hồi + xếp hạng</td>
+        <td class="num">9</td><td class="num">2,50</td>
+        <td><span class="bar" style="width:100%"></span><span class="mono" style="font-size:11.5px;color:var(--muted)">46,9 %</span></td>
+        <td><span class="chip own">tường</span></td>
+      </tr>
+      <tr>
+        <td><b>Gold nằm ngoài rổ 50</b><br><span style="color:var(--muted);font-size:12.5px">truy hồi không lấy được văn bản đúng vào rổ</span></td>
+        <td>truy hồi</td>
+        <td class="num">4</td><td class="num">1,17</td>
+        <td><span class="bar" style="width:46.7%"></span><span class="mono" style="font-size:11.5px;color:var(--muted)">21,9 %</span></td>
+        <td><span class="chip">D</span></td>
+      </tr>
+      <tr>
+        <td><b>Giữ chỗ n=3 chiếm mất slot</b><br><span style="color:var(--muted);font-size:12.5px">bộ chấm đã xếp gold vào top-5, quy tắc chốt đẩy ra</span></td>
+        <td>chốt top-5</td>
+        <td class="num">2</td><td class="num">0,67</td>
+        <td><span class="bar" style="width:26.7%"></span><span class="mono" style="font-size:11.5px;color:var(--muted)">12,5 %</span></td>
+        <td><span class="chip">chi phí đã biết</span></td>
+      </tr>
+      <tr>
+        <td><b>Bộ chấm đẩy gold ra</b><br><span style="color:var(--muted);font-size:12.5px">rổ đã xếp đúng top-5, chấm lại làm hỏng</span></td>
+        <td>xếp hạng</td>
+        <td class="num">2</td><td class="num">0,50</td>
+        <td><span class="bar" style="width:20%"></span><span class="mono" style="font-size:11.5px;color:var(--muted)">9,4 %</span></td>
+        <td><span class="chip">E</span></td>
+      </tr>
+      <tr>
+        <td><b>Ngoài cổng M=20 → không được đọc sâu</b><br><span style="color:var(--muted);font-size:12.5px">gold ở hạng 21–50, tầng 2 không bao giờ nhìn tới</span></td>
+        <td>cổng M</td>
+        <td class="num">2</td><td class="num">0,50</td>
+        <td><span class="bar" style="width:20%"></span><span class="mono" style="font-size:11.5px;color:var(--muted)">9,4 %</span></td>
+        <td><span class="chip">E</span></td>
+      </tr>
+      <tr class="total">
+        <td>Tổng</td><td></td><td class="num">19</td><td class="num">5,33</td>
+        <td class="mono" style="font-size:12px">100 %</td><td></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ══════════ 2 · PIPELINE ══════════ -->
+<section>
+  <h2><span class="idx">02</span>Rò ở đâu trong pipeline</h2>
+  <p class="lede">Cùng năm cơ chế đó, đặt vào đúng chỗ chúng xảy ra. Bề rộng thẻ bên phải
+    tỉ lệ với số điểm mất.</p>
+
+  <figure>
+  <svg class="dg" viewBox="0 0 920 596" role="img" xmlns="http://www.w3.org/2000/svg"
+       aria-label="Sơ đồ pipeline dọc: kho 8.532 văn bản chia sang BM25 mức đoạn và dense bi-encoder, hoà RRF thành rổ 50 văn bản, tầng 1 chấm 50 văn bản, cổng M=20 rồi tầng 2 đọc sâu, chốt top-5 giữ chỗ n=3, nộp 5 id đạt 0,9467. Năm điểm rò: ngoài rổ 50 mất 1,17 điểm; bộ chấm đẩy gold ra mất 0,50; cả rổ lẫn bộ chấm đều vùi mất 2,50; ngoài cổng M=20 mất 0,50; giữ chỗ chiếm slot mất 0,67.">
+    <defs>
+      <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+      </marker>
+      <marker id="arL" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path class="leakfill" d="M0 0 L10 5 L0 10 z"/>
+      </marker>
+    </defs>
+
+    <g fill="currentColor" font-family="IBM Plex Sans, sans-serif">
+
+    <!-- flow spine -->
+    <g stroke="currentColor" stroke-width="1.6" marker-end="url(#ar)" opacity=".75">
+      <line x1="152" y1="66" x2="152" y2="88"/>
+      <line x1="152" y1="140" x2="152" y2="162"/>
+      <line x1="152" y1="230" x2="152" y2="252"/>
+      <line x1="152" y1="320" x2="152" y2="342"/>
+      <line x1="152" y1="410" x2="152" y2="432"/>
+      <line x1="152" y1="500" x2="152" y2="522"/>
+    </g>
+    <!-- split / merge -->
+    <g stroke="currentColor" stroke-width="1.6" fill="none" opacity=".55">
+      <path d="M152 78 H62 V88"/><path d="M152 78 H242 V88"/>
+      <path d="M62 132 V152 H242 V132"/>
+    </g>
+
+    <!-- boxes -->
+    <g stroke="currentColor" stroke-width="1.4" fill="none">
+      <rect x="24" y="22" width="256" height="44"/>
+      <rect x="24" y="88" width="112" height="44"/>
+      <rect x="168" y="88" width="112" height="44"/>
+      <rect x="24" y="162" width="256" height="68"/>
+      <rect x="24" y="252" width="256" height="68"/>
+      <rect x="24" y="342" width="256" height="68"/>
+      <rect x="24" y="432" width="256" height="68"/>
+    </g>
+    <rect x="24" y="522" width="256" height="52" fill="none" stroke="currentColor" stroke-width="2.6"/>
+
+    <!-- box labels -->
+    <g font-size="13" font-weight="600" text-anchor="middle">
+      <text x="152" y="49">Kho 8.532 văn bản</text>
+      <text x="80" y="107">BM25</text>
+      <text x="224" y="107">Dense bi-encoder</text>
+      <text x="152" y="188">Hoà RRF → rổ 50 vb/câu</text>
+      <text x="152" y="278">Tầng 1 · chấm 50 vb × 1 đoạn</text>
+      <text x="152" y="368">Cổng M=20 → Tầng 2 đọc sâu</text>
+      <text x="152" y="458">Chốt top-5 · giữ chỗ n=3</text>
+      <text x="152" y="546">Nộp 5 doc_id</text>
+    </g>
+    <g font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono, monospace" opacity=".62">
+      <text x="80" y="122">mức đoạn</text>
+      <text x="224" y="122">khớp reranker</text>
+      <text x="152" y="207">trần recall@50 = 0,9883</text>
+      <text x="152" y="297">rổ trần, không chấm = 0,9117</text>
+      <text x="152" y="387">recall@20 của rổ = 0,9667</text>
+      <text x="152" y="477">3 slot đầu lấy thẳng từ rổ</text>
+    </g>
+    <text x="152" y="563" font-size="13" font-weight="700" text-anchor="middle"
+          font-family="IBM Plex Mono, monospace" class="score">0,9467</text>
+
+    <!-- leak connectors -->
+    <g class="leak" stroke-width="1.5" fill="none" marker-end="url(#arL)" stroke-dasharray="4 3">
+      <path d="M280 196 H352"/>
+      <path d="M280 285 H352"/>
+      <path d="M280 300 H316 V330 H352"/>
+      <path d="M280 376 H352"/>
+      <path d="M280 466 H352"/>
+    </g>
+
+    <!-- leak cards: width = 130 + loss/2.5*330 -->
+    <g class="leak" stroke-width="1.2" fill="none" opacity=".85">
+      <rect x="356" y="178" width="284" height="38"/>
+      <rect x="356" y="266" width="196" height="38"/>
+      <rect x="356" y="312" width="460" height="38"/>
+      <rect x="356" y="358" width="196" height="38"/>
+      <rect x="356" y="448" width="218" height="38"/>
+    </g>
+    <g font-size="11.5" fill="currentColor">
+      <text x="368" y="195">Gold nằm ngoài rổ 50</text>
+      <text x="368" y="209" opacity=".62" font-size="10.5">4 câu · việc của khâu truy hồi</text>
+
+      <text x="368" y="283">Bộ chấm đẩy gold ra</text>
+      <text x="368" y="297" opacity=".62" font-size="10.5">2 câu · rổ đã xếp đúng top-5</text>
+
+      <text x="368" y="329" font-weight="600">Cả rổ lẫn bộ chấm đều vùi — “tường”</text>
+      <text x="368" y="343" opacity=".62" font-size="10.5">9 câu · gold ở hạng 6–20, không tầng nào kéo lên</text>
+
+      <text x="368" y="375">Ngoài cổng M=20</text>
+      <text x="368" y="389" opacity=".62" font-size="10.5">2 câu · tầng 2 không nhìn tới</text>
+
+      <text x="368" y="465">Giữ chỗ n=3 chiếm slot</text>
+      <text x="368" y="479" opacity=".62" font-size="10.5">2 câu · chi phí đã trả có ý thức</text>
+    </g>
+    <g class="leakfill" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" text-anchor="end">
+      <text x="628" y="202">−1,17</text>
+      <text x="540" y="290">−0,50</text>
+      <text x="804" y="336">−2,50</text>
+      <text x="540" y="382">−0,50</text>
+      <text x="562" y="472">−0,67</text>
+    </g>
+
+    </g>
+  </svg>
+  <figcaption>Hai nhánh truy hồi chạy song song rồi hoà bằng RRF; từ đó trở đi mọi khâu đều
+    bị chặn trên bởi recall@50 = 0,9883 của rổ. Bốn trong năm điểm rò nằm sau khâu hoà rổ —
+    nhưng gần một nửa số điểm mất tập trung vào một nhóm câu mà cả hai tầng cùng bỏ sót.</figcaption>
+  </figure>
+
+  <div class="notes">
+    <div class="note red">
+      <h3>Nghịch lý phải giải thích khi thuyết trình</h3>
+      <p>Nộp thẳng 5 văn bản đầu rổ, <b>không chấm lại gì</b>, được 0,9117. Chấm lại đầy đủ
+        bằng cross-encoder 568 triệu tham số được <b>0,9100</b> — kém hơn. Đếm trực tiếp:
+        bộ chấm cứu 14 câu, làm hỏng 22 câu, ròng <b>−8</b>. Không phải nó yếu; rổ đã giỏi
+        tới mức phần lớn việc còn lại của nó là phá.</p>
+    </div>
+    <div class="note">
+      <h3>Vì sao vẫn giữ quy tắc giữ chỗ n=3</h3>
+      <p>Nó chính là thứ chặn bớt 22 câu bị làm hỏng ở trên. Hạ về n=2 sẽ cứu 2 câu trong
+        bảng, nhưng điểm tụt <b>0,9467 → 0,9300</b>. Dòng “giữ chỗ chiếm slot” là giá đã
+        trả có ý thức, không phải lỗi cần vá.</p>
+    </div>
+    <div class="note green">
+      <h3>Một văn bản khó tính hai lần</h3>
+      <p>Trong 4 câu có gold ngoài rổ, hai câu (<span class="mono">112344</span> và
+        <span class="mono">12654</span>) cùng trỏ về <b>một</b> văn bản. Đã kiểm: văn bản đó
+        có trong kho 8.532 — lỗi truy hồi thật, không phải thiếu dữ liệu. Sửa đúng nó là lấy
+        lại 0,67 điểm.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 3 · 300 CÂU ══════════ -->
+<section>
+  <h2><span class="idx">03</span>300 câu đang nằm đâu trong rổ</h2>
+  <p class="lede">Phân bố hạng của văn bản đúng bên trong rổ 50. Đây là thứ quyết định khâu
+    nào còn đáng đầu tư.</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr>
+      <th>Hạng của gold trong rổ</th><th style="text-align:right">Số câu</th>
+      <th style="width:34%">Phân bố</th><th>Trạng thái</th>
+    </tr></thead>
+    <tbody>
+      <tr><td class="mono">1</td><td class="num">192</td>
+        <td><span class="bar q" style="width:100%"></span></td>
+        <td style="color:var(--ok)">đã đúng — recall@1 = 0,6217</td></tr>
+      <tr><td class="mono">2 – 5</td><td class="num">84</td>
+        <td><span class="bar q" style="width:43.8%"></span></td>
+        <td style="color:var(--ok)">đã đúng — cộng dồn 276 câu = 0,9117</td></tr>
+      <tr><td class="mono">6 – 10</td><td class="num">11</td>
+        <td><span class="bar q" style="width:5.7%"></span></td>
+        <td>cần bộ chấm kéo lên</td></tr>
+      <tr><td class="mono">11 – 20</td><td class="num">4</td>
+        <td><span class="bar q" style="width:2.1%"></span></td>
+        <td>cần bộ chấm kéo lên</td></tr>
+      <tr><td class="mono">21 – 50</td><td class="num">6</td>
+        <td><span class="bar q" style="width:3.1%"></span></td>
+        <td>nằm sau cổng M=20</td></tr>
+      <tr><td class="mono">ngoài rổ 50</td><td class="num">3</td>
+        <td><span class="bar" style="width:1.6%"></span></td>
+        <td style="color:var(--loss)">khâu truy hồi</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="font-size:12.5px;color:var(--muted);margin:10px 0 0">
+    Bảng này đếm theo <b>câu</b> (mỗi câu một hạng gold). Bảng 01 đếm theo <b>gold bị mất</b>,
+    nên dòng “ngoài rổ 50” ở đó là 4: ba câu mất trọn văn bản đúng, cộng một câu có 2 gold
+    chỉ mất một nửa — tổng 1,17 điểm.</p>
+
+  <div class="notes">
+    <div class="note">
+      <h3>Đường cong recall@k của rổ</h3>
+      <p class="mono" style="font-size:12.5px; line-height:2">
+        @1 &nbsp;0,6217<br>@5 &nbsp;0,9117<br>@10 0,9517<br>@20 0,9667<br>@50 0,9883</p>
+      <p style="margin-top:8px">Bão hoà rất nhanh sau k = 5.</p>
+    </div>
+    <div class="note red">
+      <h3>Đọc ra việc phải làm</h3>
+      <p>recall@50 gần cạn (còn 3 câu), nên “lấy thêm văn bản vào rổ” <b>không</b> còn là
+        việc đáng làm. Nhưng recall@1 mới 0,6217, mà quy tắc chốt đưa <b>3 slot đầu của rổ
+        thẳng vào đáp án</b> — nên mỗi điểm recall@1 đi thẳng vào kết quả cuối, không bị
+        khâu nào ở giữa làm loãng.</p>
+    </div>
+    <div class="note">
+      <h3>Câu hỏi đã đổi</h3>
+      <p>Từ <i>“làm sao lấy thêm văn bản đúng vào rổ?”</i> sang
+        <i>“làm sao xếp đúng hơn ở hạng 1–5?”</i> — hai chế độ này đòi hai loại công việc
+        khác hẳn nhau.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 4 · DEBUG ══════════ -->
+<section>
+  <h2><span class="idx">04</span>Cách debug khi một con số động đậy</h2>
+  <p class="lede">Sáu cổng kiểm này đã cứu khoảng 21 giờ GPU. Chạy chúng trước khi tin bất kỳ
+    Δ nào.</p>
+  <ol class="gates">
+    <li><b>In kèm dòng “rổ trần, không chấm lại”</b> ở mọi bảng kết quả. Cấu hình đang đo còn
+      thua dòng đó thì dừng, đừng đọc Δ. Một dòng code — đã cứu 3 giờ GPU và cả một nhánh
+      nghiên cứu.</li>
+    <li><b>Kiểm Δ có vượt sàn nhiễu chưa.</b> dev300 sai số ±1,5 câu = ±0,50 điểm. Hiệu ứng
+      dưới ~1,5 điểm là không đo được về nguyên tắc, chạy bao nhiêu lượt cũng vậy.</li>
+    <li><b>Kiểm cấu hình của con số.</b> Mọi con số dư địa phải đo ở <i>đúng</i> cấu hình bài
+      đang nộp, và ghi kèm cấu hình bên cạnh. Đã từng đếm “22 câu hỏng” ở n=1 trong khi bài
+      nộp chạy n=3 — thật ra chỉ hỏng 1 câu.</li>
+    <li><b>Kiểm chồng lấn trước khi cộng dồn.</b> Đọc sâu, ghép tiêu đề, rổ tốt hơn, chấm
+      lại — bốn “giải pháp” này sửa <i>cùng</i> một nhóm câu. Đo riêng thì cái nào cũng
+      dương, gộp lại thì không cộng được.</li>
+    <li><b>Đo trần trước khi chạy.</b> Oracle chạy trên CPU vài giây và cho biết trần tuyệt
+      đối của hướng đang định thử. Đã đóng ba hướng lớn trước khi tiêu một giờ GPU nào.</li>
+    <li><b>Đừng chọn tham số bằng dev.</b> Cấu hình đỉnh dev (0,9350) là cấu hình
+      <i>thấp nhất</i> trên bảng xếp hạng thật (0,8943), và ngược lại. Không có hằng số quy
+      đổi — độ lệch thay đổi theo chính tham số đang vặn.</li>
+  </ol>
+</section>
+
+<footer>
+  Nguồn số: nhật ký dự án 12–28/08 và các file điểm trong <span class="mono">Ketqua_E/</span>.
+  Bảng mục 01 và mục 03 được tính lại ngày 29/08 từ dữ liệu thô
+  (<span class="mono">order_dev300_matchEmb.json</span> ·
+  <span class="mono">scores_dev300_moc_k3.json</span> ·
+  <span class="mono">dev_300_locked.json</span>), chạy trên CPU.
+  Chi tiết phương pháp: <i>BaoCao_ChiTiet_Retrieval_Khim.docx</i>, chương R7–R9 và Phụ lục B.
+</footer>
+
+</div>

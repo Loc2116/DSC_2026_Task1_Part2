@@ -1,0 +1,25 @@
+# ── Dữ liệu BTC và tạo phẩm lớn: KHÔNG đưa lên repo ──
+Input/
+selected-contexts/
+*.npy
+bm25_top100_*.json
+fusion_rrf_top50_*.json
+dev_*_locked.json
+train.json
+public-official.json
+
+# ── Tạo phẩm chứa dự đoán trên ĐỀ THI (xem docs/ghi_chu_du_lieu.md) ──
+results/public/
+scores_public_*.json
+order_public*.json
+submission*.zip
+submission*.json
+
+# ── Rác ──
+__pycache__/
+*.pyc
+results*.zip
+probe.zip
+~$*
+.ipynb_checkpoints/
+.DS_Store

@@ -1,0 +1,15 @@
+# Suy luận / xếp hạng
+torch>=2.0
+transformers>=4.40
+sentence-transformers>=3.0
+numpy>=1.24
+
+# Tách từ tiếng Việt
+underthesea>=6.8
+
+# Chỉ cần khi tinh chỉnh hoặc chạy model lượng tử hoá 4-bit
+peft>=0.11
+bitsandbytes>=0.43
+
+# Chỉ cần cho gemini_bench.py (công cụ đối chứng, KHÔNG dùng để chấm bài nộp)
+requests>=2.31
